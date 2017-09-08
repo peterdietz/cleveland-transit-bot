@@ -89,10 +89,18 @@ function receivedMessage(event) {
     // If we receive a text message, check to see if it matches a keyword
     // and send back the template example. Otherwise, just echo the text we received.
     switch (messageText) {
-      case 'generic':
-        sendGenericMessage(senderID);
+      case 'help':
+        sendStationsHelp(senderID);
         break;
-
+        
+      case 'home':
+        sendStationMessage(senderID, 'home');
+        break;
+        
+      case 'public square':
+        sendStationMessage(senderID, 'publicSquare');
+        break;
+  
       default:
         sendTextMessage(senderID, messageText);
     }
@@ -134,7 +142,36 @@ function sendTextMessage(recipientId, messageText) {
   callSendAPI(messageData);
 }
 
-function sendGenericMessage(recipientId) {
+function sendStationsHelp(recipientId) {
+    var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: "Stations with data: 'home' and 'public square'."
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendStationMessage(recipientId, station) {
+  var topElementTitle = "";
+  var upcoming = [];
+  
+  if(station == 'home') {
+    topElementTitle = "CENTER RIDGE RD & LAKEVIEW AV - East";
+    upcoming = [{estimated:"10:20 pm	26 Public Square", scheduled:"Scheduled at 10:20 pm"},
+                {estimated:"10:50 pm	26 Public Square", scheduled:"Scheduled at 10:50 pm"},
+                {estimated: "11:20 pm	26 Public Square", scheduled: "Scheduled time shown"}];
+
+  } else if(station == 'publicSquare') {
+    topElementTitle = "PUBLIC SQUARE & WEST ROADWAY - West";
+    upcoming = [{estimated:"11:11 pm	26 Westgate Transit Center", scheduled:"Scheduled at 11:11 pm"},
+                {estimated:"11:42 pm	26 Westgate Transit Center", scheduled:"Scheduled at 11:41 pm"},
+                {estimated: "12:11 am	26 Westgate Transit Center", scheduled: "Scheduled time shown"}];
+  }
+  
   var messageData = {
     recipient: {
       id: recipientId
@@ -143,41 +180,25 @@ function sendGenericMessage(recipientId) {
       attachment: {
         type: "template",
         payload: {
-          template_type: "generic",
-          elements: [{
-            title: "rift",
-            subtitle: "Next-generation virtual reality",
-            item_url: "https://www.oculus.com/en-us/rift/",               
-            image_url: "http://messengerdemo.parseapp.com/img/rift.png",
-            buttons: [{
-              type: "web_url",
-              url: "https://www.oculus.com/en-us/rift/",
-              title: "Open Web URL"
-            }, {
-              type: "postback",
-              title: "Call Postback",
-              payload: "Payload for first bubble",
-            }],
-          }, {
-            title: "touch",
-            subtitle: "Your Hands, Now in VR",
-            item_url: "https://www.oculus.com/en-us/touch/",               
-            image_url: "http://messengerdemo.parseapp.com/img/touch.png",
-            buttons: [{
-              type: "web_url",
-              url: "https://www.oculus.com/en-us/touch/",
-              title: "Open Web URL"
-            }, {
-              type: "postback",
-              title: "Call Postback",
-              payload: "Payload for second bubble",
-            }]
+          template_type: "list",
+          elements: [{        
+            title: topElementTitle,
+            subtitle: "Next 3 arrivals:",               
+            image_url: "https://cdn.glitch.com/af59bdb2-02de-44d0-aebd-22795c7303f4%2FiconTimePoint.png?1504839285786",
           }]
         }
       }
     }
-  };  
-
+  }; 
+  
+  for(var i = 0; i < upcoming.length; i++)
+  {
+    messageData.message.attachment.payload.elements.push(
+      { title: upcoming[i].estimated, 
+        subtitle: upcoming[i].scheduled
+      });
+  }
+  
   callSendAPI(messageData);
 }
 
